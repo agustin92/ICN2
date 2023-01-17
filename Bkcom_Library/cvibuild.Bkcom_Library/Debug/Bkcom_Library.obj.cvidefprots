@@ -1,0 +1,215 @@
+[InitializeRead_Value]
+Class="Function"
+Prototype="int InitializeRead_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:41:1"
+
+[UninitializeRead_Value]
+Class="Function"
+Prototype="void UninitializeRead_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:41:1"
+
+[GetPointerToRead_Value]
+Class="Function"
+Prototype="unsigned char *GetPointerToRead_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:41:1"
+
+[ReleasePointerToRead_Value]
+Class="Function"
+Prototype="void ReleasePointerToRead_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:41:1"
+
+[InitializeWrite_Value]
+Class="Function"
+Prototype="int InitializeWrite_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:42:1"
+
+[UninitializeWrite_Value]
+Class="Function"
+Prototype="void UninitializeWrite_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:42:1"
+
+[GetPointerToWrite_Value]
+Class="Function"
+Prototype="unsigned char *GetPointerToWrite_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:42:1"
+
+[ReleasePointerToWrite_Value]
+Class="Function"
+Prototype="void ReleasePointerToWrite_Value();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:42:1"
+
+[InitializeWrite_Flag]
+Class="Function"
+Prototype="int InitializeWrite_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:43:1"
+
+[UninitializeWrite_Flag]
+Class="Function"
+Prototype="void UninitializeWrite_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:43:1"
+
+[GetPointerToWrite_Flag]
+Class="Function"
+Prototype="int *GetPointerToWrite_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:43:1"
+
+[ReleasePointerToWrite_Flag]
+Class="Function"
+Prototype="void ReleasePointerToWrite_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:43:1"
+
+[SetWrite_Flag]
+Class="Function"
+Prototype="void SetWrite_Flag(int val);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:43:1"
+
+[GetWrite_Flag]
+Class="Function"
+Prototype="int GetWrite_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:43:1"
+
+[InitializeTP_Flag]
+Class="Function"
+Prototype="int InitializeTP_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:44:1"
+
+[UninitializeTP_Flag]
+Class="Function"
+Prototype="void UninitializeTP_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:44:1"
+
+[GetPointerToTP_Flag]
+Class="Function"
+Prototype="int *GetPointerToTP_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:44:1"
+
+[ReleasePointerToTP_Flag]
+Class="Function"
+Prototype="void ReleasePointerToTP_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:44:1"
+
+[SetTP_Flag]
+Class="Function"
+Prototype="void SetTP_Flag(int val);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:44:1"
+
+[GetTP_Flag]
+Class="Function"
+Prototype="int GetTP_Flag();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:44:1"
+
+[InitializeTP_Velocity]
+Class="Function"
+Prototype="int InitializeTP_Velocity();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:45:1"
+
+[UninitializeTP_Velocity]
+Class="Function"
+Prototype="void UninitializeTP_Velocity();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:45:1"
+
+[GetPointerToTP_Velocity]
+Class="Function"
+Prototype="int *GetPointerToTP_Velocity();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:45:1"
+
+[ReleasePointerToTP_Velocity]
+Class="Function"
+Prototype="void ReleasePointerToTP_Velocity();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:45:1"
+
+[SetTP_Velocity]
+Class="Function"
+Prototype="void SetTP_Velocity(int val);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:45:1"
+
+[GetTP_Velocity]
+Class="Function"
+Prototype="int GetTP_Velocity();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:45:1"
+
+[main]
+Class="Function"
+Prototype="int main(int argc, char *argv[]);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:51:5"
+
+[conv_short_to_word]
+Class="Function"
+Prototype="void conv_short_to_word(short v, unsigned char *buf);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:111:6"
+
+[panelCB]
+Class="Function"
+Prototype="int panelCB(int panel, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:126:17"
+
+[Start_reading]
+Class="Function"
+Prototype="void Start_reading();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:136:6"
+
+[Stop_reading]
+Class="Function"
+Prototype="void Stop_reading();"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:147:6"
+
+[start_reading]
+Class="Function"
+Prototype="int start_reading(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:160:17"
+
+[read_parameters]
+Class="Function"
+Prototype="int read_parameters(void *functionData);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:184:17"
+
+[update_interface]
+Class="Function"
+Prototype="int update_interface(void *functionData);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:642:17"
+
+[ByPass]
+Class="Function"
+Prototype="int ByPass(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:720:17"
+
+[GV]
+Class="Function"
+Prototype="int GV(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:777:17"
+
+[AV]
+Class="Function"
+Prototype="int AV(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:833:17"
+
+[Vent]
+Class="Function"
+Prototype="int Vent(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:889:17"
+
+[TP_on_off]
+Class="Function"
+Prototype="int TP_on_off(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:946:17"
+
+[heater_on_off]
+Class="Function"
+Prototype="int heater_on_off(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:974:17"
+
+[heater_output]
+Class="Function"
+Prototype="int heater_output(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1031:17"
+
+[READ_FUNTION]
+Class="Function"
+Prototype="int READ_FUNTION(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1072:17"
+
+[WRITE_FUNTION]
+Class="Function"
+Prototype="int WRITE_FUNTION(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1220:17"
+
