@@ -1,12 +1,12 @@
-# ICN2
-Control software for ICN2 PLD
+# PLD
+Control software for NGU PLD
 
 
 Version 1.0
 
 Software in progress
 
-Control software for the PLD chambers of ICN2
+Control software for the NGU PLD 
 
 Features
 
