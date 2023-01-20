@@ -30,9 +30,11 @@ static int panelHandle;
 // Static functions
 static int threadFunctionId_read_parameters;
 static int threadFunctionId_update_interface;
+static int threadFunctionId_PID_temperature;
 static int gExit_read_parameters = 1;
 static int CVICALLBACK read_parameters (void *functionData); // Measure thread
 static int CVICALLBACK update_interface (void *functionData); //Update interface
+static int CVICALLBACK PID_temperature (void *functionData);
 
 
 
@@ -43,6 +45,7 @@ DefineThreadSafeArrayVar(unsigned char,Write_Value,11,0); // Thread safe variabl
 DefineThreadSafeScalarVar(int,Write_Flag, 0); // Thread safe variable => Write flag to indicate the program that it is necesary to write new values in the Beckhoff coupler
 DefineThreadSafeScalarVar(int,TP_Flag, 0); // Thread safe variable => Write flag to indicate the program that it is necesary to write new values in the Turbo Pump controller
 DefineThreadSafeScalarVar(int,TP_Velocity, 0); // Thread safe variable => Turbo pump velocity
+DefineThreadSafeScalarVar(int,Temperature_Flag, 0); //Flag to let know the Temperature PID control that changes have been made on the rate and/or set point values
 
 
 //==============================================================================
@@ -57,6 +60,7 @@ int main (int argc, char *argv[])
 	int *Write_Flag_Ptr;
 	int *TP_Flag_Ptr;
 	int *TP_Velocity_Ptr;
+	int *Temperature_Flag_Ptr;
 	
 	// Initialize read values thread safe
 	InitializeRead_Value();
@@ -64,6 +68,7 @@ int main (int argc, char *argv[])
 	InitializeWrite_Flag();
 	InitializeTP_Flag();
 	InitializeTP_Velocity();
+	InitializeTemperature_Flag();
 	
 	Read_Value_Ptr = GetPointerToRead_Value();
 	FillBytes (*Read_Value_Ptr, 0, 18, 0x0);
@@ -85,6 +90,10 @@ int main (int argc, char *argv[])
 	(*TP_Velocity_Ptr) = 0;
 	ReleasePointerToTP_Velocity();
 	
+	Temperature_Flag_Ptr = GetPointerToTemperature_Flag();
+	(*Temperature_Flag_Ptr) = 0;
+	ReleasePointerToTemperature_Flag();
+	
     /* initialize and load resources */
     nullChk (InitCVIRTE (0, argv, 0));
     errChk (panelHandle = LoadPanel (0, "Bkcom_Library.uir", PANEL));
@@ -103,6 +112,7 @@ Error:
 	UninitializeWrite_Flag();
 	UninitializeTP_Flag();
 	UninitializeTP_Velocity();
+	UninitializeTemperature_Flag();
 	
     DiscardPanel (panelHandle);
     return 0;
@@ -133,25 +143,29 @@ int CVICALLBACK panelCB (int panel, int event, void *callbackData,
 
 
 //==============================================================================
-void Start_reading (void)
+void Start_reading_thread (void)
 {
 	
 	gExit_read_parameters = 0; 
 	
 	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,read_parameters, NULL,&threadFunctionId_read_parameters);
 	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,update_interface, NULL,&threadFunctionId_update_interface);
+	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,PID_temperature, NULL,&threadFunctionId_PID_temperature);
 
 	return;
 }
 //==============================================================================     
-void Stop_reading (void)
+void Stop_reading_thread (void)
 {
 	gExit_read_parameters = 1;  
 	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_read_parameters,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
 	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_update_interface,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
+	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_PID_temperature,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
 	
 	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_read_parameters); 
 	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_update_interface); 
+	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_PID_temperature); 
+	
 	
 	//UninitializeRead_Value();
 	return;
@@ -167,11 +181,11 @@ int CVICALLBACK start_reading (int panel, int control, int event,
 			GetCtrlVal(panelHandle , PANEL_TOGGLEBUTTON, &status);
 			if (status ==1)
 			{
-				Start_reading();
+				Start_reading_thread();
 			}
 			else
 			{
-				Stop_reading();
+				Stop_reading_thread();
 			}
 			break;
 	}
@@ -222,10 +236,6 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			//Open COM port
 			error = OpenComConfig (PortCOM, "", 38400, 2, 8, 1, 256, 256);
 			
-			
-			
-			
-			
 			//Flush COM Port
 			error = FlushInQ (PortCOM);
 			error = FlushOutQ (PortCOM);
@@ -249,18 +259,7 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			{
 				Checksumm[0]= Checksumm[0] + send_buffer[i];
 			}
-			
-			//printf("Checksum = %X\n", Checksumm[0]);
-			
 			send_buffer[4] = Checksumm[0]; //		
-		
-			//Request command from master to slave
-			/*
-			for(int i=0; i < 5; i++)
-			{
-				printf("send_buffer[%d] = \t%X\n",i,send_buffer[i]);
-			}
-			*/
 			
 			//Write command to COM port
 			write_bytes_counter = 0;
@@ -270,19 +269,12 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 				error = ComWrtByte (PortCOM, send_buffer[i]);
 			}
 			
-			//printf("Written bytes = \t%d \n", write_bytes_counter);
-			//printf("OK\n");
-			
 			//READ: the first READ is empty because the input channels are off		
 			for(int i=0; i < 4; i++)
 			{
 			read_buffer[i] = ComRdByte (PortCOM);
 			}
-			
-			
-			
-			
-			
+
 			// Start K1 and TP relays
 			
 			error = FlushInQ (PortCOM);
@@ -292,9 +284,6 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			FillBytes (read_buffer, 0, 18, 0x0);
 			FillBytes (send_buffer, 0, 11, 0x0);
 			FillBytes (Checksumm, 0, 1, 0x0);
-			
-			
-			
 			
 			//Concatenate command bytes
 			conv_short_to_word(1.0,K1);
@@ -311,7 +300,6 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			send_buffer[8] = K1[1]+TP[1]; //		Data byte 4
 			send_buffer[9] = 0x00; //		Data byte 5
 			
-			
 			Write_Value_Ptr = GetPointerToWrite_Value();
 			(*Write_Value_Ptr)[8] = (*Write_Value_Ptr)[8] + K1[1]+TP[1];
 			ReleasePointerToWrite_Value();
@@ -321,11 +309,7 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 				Checksumm[0]= Checksumm[0] + send_buffer[i];
 			}
 			
-			//printf("Checksum = %X\n", Checksumm[0]);
-			
 			send_buffer[10] = Checksumm[0]; //		
-			
-				
 			
 			//Write command to COM port
 			write_bytes_counter = 0;
@@ -344,11 +328,6 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			
 			
 			//
-			
-			
-			
-			
-			
 			
 			
 			
@@ -406,14 +385,6 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			}
 			ReleasePointerToRead_Value();
 			
-			/*
-			//PRINT50
-			for(int i=0; i < 18; i++)
-			{
-			printf("Lee bytes [%d] %x\n",i,  read_buffer[i]);
-			}
-			*/
-			
 			}
 			else
 			{
@@ -448,10 +419,7 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 				Checksumm[0]= Checksumm[0] + send_buffer[i];
 			}
 			
-			//printf("Checksum = %X\n", Checksumm[0]);
-			
 			send_buffer[10] = Checksumm[0]; //		
-			
 				
 			
 			//Write command to COM port
@@ -711,9 +679,6 @@ int CVICALLBACK update_interface (void *functionData)
 	}	
 	return 0;
 }
-
-//===========================================================================================
-
 
 //===========================================================================================
 // ByPass valve control
@@ -1027,7 +992,7 @@ int CVICALLBACK heater_on_off (int panel, int control, int event,
 	return 0;
 }
 //============================================================================================
-
+/*
 int CVICALLBACK heater_output (int panel, int control, int event,
 							   void *callbackData, int eventData1, int eventData2)
 {
@@ -1050,8 +1015,6 @@ int CVICALLBACK heater_output (int panel, int control, int event,
 			heater_output = heater_output*32767.0/10.0;
 			output = (int)heater_output;
 			conv_short_to_word(output,value);// Turn on the 1st Bite (starting from 0)
-			printf("%x\n",value[0]);
-			printf("%x\n",value[1]);
 			Write_Value_Ptr = GetPointerToWrite_Value();
 			(*Write_Value_Ptr)[6] = value[1];
 			(*Write_Value_Ptr)[7] = value[0];
@@ -1063,6 +1026,237 @@ int CVICALLBACK heater_output (int panel, int control, int event,
 			
 			
 			
+			break;
+	}
+	return 0;
+}
+*/
+//============================================================================================
+
+int CVICALLBACK PID_temperature (void *functionData)
+{
+	// Local variables
+	double temperature_real;
+	double temperature_calc;
+	double initial_temperature;
+	double rate;
+	double temperature_set_point; 
+	double temperature_set_point_ini;
+	double initial_time;
+	double actual_time;
+	double time_aux;
+	double time_cicle;
+	double time_old;
+	double error_temp;
+	double error_old;
+	double output;
+	
+	int heater_output;
+	
+	unsigned char value[2];
+	
+	// PID parameters
+	double kp;
+	double ki;
+	double kd;
+	// PID correction
+	double p;
+	double i;
+	double d;
+	
+	
+	int temperature_flag;
+	int ramp_flag; // To indicate if the ramp is going downward = 0 or upward = 1 
+	
+	
+	// Thread safe variables
+	int *Temperature_Flag_Ptr;
+	unsigned char write_values[18];
+	unsigned char (*Write_Value_Ptr)[18];
+	int (*Write_Flag_Ptr);
+	
+	
+	
+	
+	Delay(3.5);
+	ramp_flag = 0;
+	initial_time = Timer();
+	time_aux = initial_time;
+	time_cicle = 0.0;
+	time_old = 0.0;
+	//GetCtrlVal(panelHandle , PANEL_Rate, &rate);
+	//GetCtrlVal(panelHandle , PANEL_Temperature_Set_Point, &temperature_set_point);
+	GetCtrlVal(panelHandle , PANEL_temperature_n, &temperature_real);
+	rate = 0;
+	temperature_set_point = temperature_real;
+	SetCtrlVal(panelHandle, PANEL_Temperature_Set_Point,temperature_set_point);
+	temperature_set_point_ini = temperature_set_point;
+	
+	initial_temperature = temperature_real;
+	temperature_calc = temperature_real;
+	
+	// PID definition
+	error_temp = 0.0;
+	error_old = 0.0;
+	p = i = d = 0.0;
+	output = 0.0;
+	
+	
+	GetCtrlVal(panelHandle , PANEL_kp, &kp);
+	GetCtrlVal(panelHandle , PANEL_ki, &ki);
+	GetCtrlVal(panelHandle , PANEL_kd, &kd);
+	
+	while (!gExit_read_parameters)
+	{
+		Temperature_Flag_Ptr = GetPointerToTemperature_Flag();
+		temperature_flag = (*Temperature_Flag_Ptr);
+		ReleasePointerToTemperature_Flag();
+		Delay(0.1);
+		if (temperature_flag)
+		{
+			GetCtrlVal(panelHandle , PANEL_Rate, &rate);
+			GetCtrlVal(panelHandle , PANEL_Temperature_Set_Point, &temperature_set_point);
+			GetCtrlVal(panelHandle , PANEL_temperature_n, &initial_temperature); 
+			temperature_calc = initial_temperature;
+			Temperature_Flag_Ptr = GetPointerToTemperature_Flag();
+			(*Temperature_Flag_Ptr) = 0;
+			ReleasePointerToTemperature_Flag();
+			
+			initial_time = Timer();
+			time_cicle = initial_time;
+			
+			
+			if (initial_temperature < temperature_set_point)
+			{ 
+				ramp_flag = 1;
+			}
+			else
+			{
+				ramp_flag = 0;
+			}
+		}
+		
+		if (ramp_flag)
+		{
+			if (temperature_calc < temperature_set_point) 
+			{
+				time_aux = Timer();
+				temperature_calc = rate/60.0*(time_aux-initial_time)+initial_temperature;
+			}
+			else
+			{
+				temperature_calc = temperature_set_point;
+			}
+		}
+		
+		else
+		{
+			if (temperature_calc > temperature_set_point)
+			{
+				time_aux = Timer();
+				temperature_calc = (-1.0)*rate/60.0*(time_aux-initial_time)+initial_temperature;
+			}
+			else
+			{
+				temperature_calc = temperature_set_point;
+			}
+		}
+		GetCtrlVal(panelHandle , PANEL_temperature_n, &temperature_real);
+		time_cicle = Timer() - time_old;
+		error_temp = temperature_calc-temperature_real;
+		SetCtrlVal(panelHandle, PANEL_error_temp,error_temp);
+		SetCtrlVal(panelHandle, PANEL_temperature_calc,temperature_calc);
+		
+		
+		GetCtrlVal(panelHandle , PANEL_kp, &kp);
+		GetCtrlVal(panelHandle , PANEL_ki, &ki);
+		GetCtrlVal(panelHandle , PANEL_kd, &kd);
+		if (temperature_set_point != temperature_set_point_ini && rate !=0.0)
+		{
+			p = kp*error_temp;
+			i = i + ki*error_temp*time_cicle;
+			if (i>0.5)
+			{
+				i = 0.5;
+			}
+			d = kd*(error_temp-error_old)/(time_cicle);
+			
+			output = output + p + i + d;
+			error_old = error_temp;
+			
+			if (temperature_real<40.0)
+			{
+				if (output >5.0)
+				{
+					output = 5.0;
+				}
+			}
+			else if (temperature_real<850.0)
+			{
+				if (output > (2.262E-6*pow(temperature_real,2.0)+1.60E-3*temperature_real+3.6))
+				{
+					output = 2.262E-6*pow(temperature_real,2.0)+1.60E-3*temperature_real+3.6;
+				}
+			}
+			
+			if (output<0.0)
+			{
+				output = 0.0;
+			}
+			
+			SetCtrlVal(panelHandle , PANEL_NUMERIC_4, output);
+			
+			heater_output = (int) (output*32767.0/10.0);
+			SetCtrlVal(panelHandle , PANEL_NUMERIC, heater_output);
+			conv_short_to_word(heater_output,value);
+			Write_Value_Ptr = GetPointerToWrite_Value();
+			(*Write_Value_Ptr)[6] = value[1];
+			(*Write_Value_Ptr)[7] = value[0];
+			ReleasePointerToWrite_Value();
+				
+			Write_Flag_Ptr = GetPointerToWrite_Flag();
+			(*Write_Flag_Ptr) = 1;
+			ReleasePointerToWrite_Flag();
+			
+			SetCtrlVal(panelHandle, PANEL_p,p);
+			SetCtrlVal(panelHandle, PANEL_i,i);
+			SetCtrlVal(panelHandle, PANEL_d,d);
+		}
+		
+		time_old = Timer();
+	}
+	return 0;
+}
+
+//============================================================================================
+
+int CVICALLBACK change_rate (int panel, int control, int event,
+							 void *callbackData, int eventData1, int eventData2)
+{
+	int *Temperature_Flag_Ptr;
+	switch (event)
+	{
+		case EVENT_COMMIT:
+			Temperature_Flag_Ptr = GetPointerToTemperature_Flag();
+			(*Temperature_Flag_Ptr) = 1;
+			ReleasePointerToTemperature_Flag();
+			break;
+	}
+	return 0;
+}
+
+//============================================================================================
+
+int CVICALLBACK change_temperature_set_point (int panel, int control, int event,
+		void *callbackData, int eventData1, int eventData2)
+{
+	int *Temperature_Flag_Ptr;
+	switch (event)
+	{
+		case EVENT_COMMIT:
+			Temperature_Flag_Ptr = GetPointerToTemperature_Flag();
+			(*Temperature_Flag_Ptr) = 1;
+			ReleasePointerToTemperature_Flag();
 			break;
 	}
 	return 0;
@@ -1432,6 +1626,8 @@ int CVICALLBACK start_K1 (int panel, int control, int event,
 */
 
 //tiempo = Timer ();
+
+
 
 
 
