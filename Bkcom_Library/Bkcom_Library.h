@@ -43,6 +43,8 @@
 #define  PANEL_ki                         28      /* control type: numeric, callback function: (none) */
 #define  PANEL_kp                         29      /* control type: numeric, callback function: (none) */
 #define  PANEL_NUMERIC                    30      /* control type: numeric, callback function: (none) */
+#define  PANEL_Ar_output                  31      /* control type: numeric, callback function: Ar_flux */
+#define  PANEL_LED_Gas                    32      /* control type: LED, callback function: Gas_valve */
 
 
      /* Control Arrays: */
@@ -56,10 +58,12 @@
 
      /* Callback Prototypes: */
 
+int  CVICALLBACK Ar_flux(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK AV(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK ByPass(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK change_rate(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK change_temperature_set_point(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
+int  CVICALLBACK Gas_valve(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK GV(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK heater_on_off(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK panelCB(int panel, int event, void *callbackData, int eventData1, int eventData2);

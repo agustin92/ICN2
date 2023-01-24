@@ -405,8 +405,8 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 			send_buffer[1] = 0x03; //		Number of process data output words
 			send_buffer[2] = 0x56; //		Message ident
 			send_buffer[3] = 0x01; //		Multipoint address SLAVE 1(The address 1 has been set on the coupler)		
-			send_buffer[4] = 0x00; //		Data byte 0
-			send_buffer[5] = 0x00; //		Data byte 1
+			send_buffer[4] = (*Write_Value_Ptr)[4]; //		Data byte 0
+			send_buffer[5] = (*Write_Value_Ptr)[5]; //		Data byte 1
 			send_buffer[6] = (*Write_Value_Ptr)[6]; //		Data byte 2
 			send_buffer[7] = (*Write_Value_Ptr)[7]; //		Data byte 3
 			send_buffer[8] = (*Write_Value_Ptr)[8]; //		Data byte 4
@@ -496,7 +496,8 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 					ReleasePointerToTP_Flag();
 					Delay(0.01);
 				}
-				else {
+				else 
+				{
 					Delay(0.01);
 					error_TP = FlushInQ (PortCOM_TP);
 					error_TP = FlushOutQ (PortCOM_TP);		
@@ -850,6 +851,65 @@ int CVICALLBACK AV (int panel, int control, int event,
 	}
 	return 0;
 }
+
+
+//============================================================================================
+
+int CVICALLBACK Gas_valve (int panel, int control, int event,
+						   void *callbackData, int eventData1, int eventData2)
+{
+	unsigned char value[2];
+	int status = -1;
+	
+	
+	// Thread safe variables
+	unsigned char write_values[18];
+	unsigned char (*Write_Value_Ptr)[18];
+	int (*Write_Flag_Ptr);
+	
+	
+	switch (event)
+		
+	{
+		case EVENT_COMMIT:
+				
+			
+			
+			GetCtrlVal(panelHandle , PANEL_LED_Gas, &status);
+			if (status ==1)
+			{
+				
+				conv_short_to_word(1.0,value); // Turn on the 7th Bite (starting from 0)
+				Write_Value_Ptr = GetPointerToWrite_Value();
+				(*Write_Value_Ptr)[9] = (*Write_Value_Ptr)[9]+value[1];
+				ReleasePointerToWrite_Value();
+				//printf("%X",value[1]);
+				Write_Flag_Ptr = GetPointerToWrite_Flag();
+				(*Write_Flag_Ptr) = 1;
+				ReleasePointerToWrite_Flag();
+				
+				
+				
+			}
+			else
+			{
+				
+				conv_short_to_word(1.0,value); // Turn off the 7th Bite (starting from 0)
+				Write_Value_Ptr = GetPointerToWrite_Value();
+				(*Write_Value_Ptr)[9] = (*Write_Value_Ptr)[9] - value[1];
+				ReleasePointerToWrite_Value();
+				
+				Write_Flag_Ptr = GetPointerToWrite_Flag();
+				(*Write_Flag_Ptr) = 1;
+				ReleasePointerToWrite_Flag();
+				
+			}
+			
+			
+			break;
+	}
+	return 0;
+}
 //============================================================================================
 int CVICALLBACK Vent (int panel, int control, int event,
 					  void *callbackData, int eventData1, int eventData2)
@@ -1100,7 +1160,13 @@ int CVICALLBACK PID_temperature (void *functionData)
 	error_old = 0.0;
 	p = i = d = 0.0;
 	output = 0.0;
+	kp = 0.029;
+	ki = 0.00098;
+	kd = 0.1;
 	
+	SetCtrlVal(panelHandle, PANEL_kp,kp);
+	SetCtrlVal(panelHandle, PANEL_ki,ki);
+	SetCtrlVal(panelHandle, PANEL_kd,kd);
 	
 	GetCtrlVal(panelHandle , PANEL_kp, &kp);
 	GetCtrlVal(panelHandle , PANEL_ki, &ki);
@@ -1175,9 +1241,9 @@ int CVICALLBACK PID_temperature (void *functionData)
 		{
 			p = kp*error_temp;
 			i = i + ki*error_temp*time_cicle;
-			if (i>0.5)
+			if (i>0.1)
 			{
-				i = 0.5;
+				i = 0.1;
 			}
 			d = kd*(error_temp-error_old)/(time_cicle);
 			
@@ -1191,11 +1257,11 @@ int CVICALLBACK PID_temperature (void *functionData)
 					output = 5.0;
 				}
 			}
-			else if (temperature_real<850.0)
+			else if (temperature_real<900.0)
 			{
-				if (output > (2.262E-6*pow(temperature_real,2.0)+1.60E-3*temperature_real+3.6))
+				if (output > (2.262E-6*pow(temperature_real,2.0)+1.60E-3*temperature_real+3.8))
 				{
-					output = 2.262E-6*pow(temperature_real,2.0)+1.60E-3*temperature_real+3.6;
+					output = 2.262E-6*pow(temperature_real,2.0)+1.60E-3*temperature_real+3.8;
 				}
 			}
 			
@@ -1257,6 +1323,38 @@ int CVICALLBACK change_temperature_set_point (int panel, int control, int event,
 			Temperature_Flag_Ptr = GetPointerToTemperature_Flag();
 			(*Temperature_Flag_Ptr) = 1;
 			ReleasePointerToTemperature_Flag();
+			break;
+	}
+	return 0;
+}
+//============================================================================================
+
+int CVICALLBACK Ar_flux (int panel, int control, int event,
+						 void *callbackData, int eventData1, int eventData2)
+{
+	// Local variables
+	double ar_flux;
+	int ar_output;
+	unsigned char value[2];
+	
+	// Thread safe variables
+	unsigned char write_values[18];
+	unsigned char (*Write_Value_Ptr)[18];
+	int (*Write_Flag_Ptr);
+	switch (event)
+	{
+		case EVENT_COMMIT:
+			GetCtrlVal(panelHandle , PANEL_Ar_output, &ar_flux);
+			ar_output = (int) (ar_flux*32767.0/10.0);
+			conv_short_to_word(ar_output,value);
+			Write_Value_Ptr = GetPointerToWrite_Value();
+			(*Write_Value_Ptr)[4] = value[1];
+			(*Write_Value_Ptr)[5] = value[0];
+			ReleasePointerToWrite_Value();
+			
+			Write_Flag_Ptr = GetPointerToWrite_Flag();
+			(*Write_Flag_Ptr) = 1;
+			ReleasePointerToWrite_Flag();
 			break;
 	}
 	return 0;
@@ -1626,6 +1724,9 @@ int CVICALLBACK start_K1 (int panel, int control, int event,
 */
 
 //tiempo = Timer ();
+
+
+
 
 
 

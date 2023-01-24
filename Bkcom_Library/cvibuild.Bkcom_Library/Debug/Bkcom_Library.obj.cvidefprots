@@ -196,60 +196,70 @@ SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Libra
 [update_interface]
 Class="Function"
 Prototype="int update_interface(void *functionData);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:610:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:611:17"
 
 [ByPass]
 Class="Function"
 Prototype="int ByPass(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:685:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:686:17"
 
 [GV]
 Class="Function"
 Prototype="int GV(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:742:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:743:17"
 
 [AV]
 Class="Function"
 Prototype="int AV(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:798:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:799:17"
+
+[Gas_valve]
+Class="Function"
+Prototype="int Gas_valve(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:858:17"
 
 [Vent]
 Class="Function"
 Prototype="int Vent(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:854:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:914:17"
 
 [TP_on_off]
 Class="Function"
 Prototype="int TP_on_off(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:911:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:971:17"
 
 [heater_on_off]
 Class="Function"
 Prototype="int heater_on_off(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:939:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:999:17"
 
 [PID_temperature]
 Class="Function"
 Prototype="int PID_temperature(void *functionData);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1036:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1096:17"
 
 [change_rate]
 Class="Function"
 Prototype="int change_rate(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1229:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1299:17"
 
 [change_temperature_set_point]
 Class="Function"
 Prototype="int change_temperature_set_point(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1246:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1316:17"
+
+[Ar_flux]
+Class="Function"
+Prototype="int Ar_flux(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1332:17"
 
 [READ_FUNTION]
 Class="Function"
 Prototype="int READ_FUNTION(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1262:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1364:17"
 
 [WRITE_FUNTION]
 Class="Function"
 Prototype="int WRITE_FUNTION(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);"
-SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1410:17"
+SourceLocation="c:\Users\sganguly\Documents\National Instruments\CVI\Bkcom_Library\Bkcom_Library.c:1512:17"
 
