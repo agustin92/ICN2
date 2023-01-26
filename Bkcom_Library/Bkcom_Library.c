@@ -31,10 +31,12 @@ static int panelHandle;
 static int threadFunctionId_read_parameters;
 static int threadFunctionId_update_interface;
 static int threadFunctionId_PID_temperature;
+static int threadFunctionId_Motors;
 static int gExit_read_parameters = 1;
 static int CVICALLBACK read_parameters (void *functionData); // Measure thread
 static int CVICALLBACK update_interface (void *functionData); //Update interface
 static int CVICALLBACK PID_temperature (void *functionData);
+static int CVICALLBACK Motors (void *functionData);
 
 
 
@@ -62,6 +64,7 @@ int main (int argc, char *argv[])
 	int *TP_Velocity_Ptr;
 	int *Temperature_Flag_Ptr;
 	
+	
 	// Initialize read values thread safe
 	InitializeRead_Value();
 	InitializeWrite_Value();
@@ -69,6 +72,7 @@ int main (int argc, char *argv[])
 	InitializeTP_Flag();
 	InitializeTP_Velocity();
 	InitializeTemperature_Flag();
+	
 	
 	Read_Value_Ptr = GetPointerToRead_Value();
 	FillBytes (*Read_Value_Ptr, 0, 18, 0x0);
@@ -94,6 +98,7 @@ int main (int argc, char *argv[])
 	(*Temperature_Flag_Ptr) = 0;
 	ReleasePointerToTemperature_Flag();
 	
+	
     /* initialize and load resources */
     nullChk (InitCVIRTE (0, argv, 0));
     errChk (panelHandle = LoadPanel (0, "Bkcom_Library.uir", PANEL));
@@ -113,6 +118,7 @@ Error:
 	UninitializeTP_Flag();
 	UninitializeTP_Velocity();
 	UninitializeTemperature_Flag();
+
 	
     DiscardPanel (panelHandle);
     return 0;
@@ -151,7 +157,8 @@ void Start_reading_thread (void)
 	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,read_parameters, NULL,&threadFunctionId_read_parameters);
 	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,update_interface, NULL,&threadFunctionId_update_interface);
 	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,PID_temperature, NULL,&threadFunctionId_PID_temperature);
-
+	CmtScheduleThreadPoolFunction (DEFAULT_THREAD_POOL_HANDLE,Motors, NULL,&threadFunctionId_Motors);
+	
 	return;
 }
 //==============================================================================     
@@ -161,10 +168,12 @@ void Stop_reading_thread (void)
 	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_read_parameters,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
 	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_update_interface,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
 	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_PID_temperature,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
+	CmtWaitForThreadPoolFunctionCompletion (DEFAULT_THREAD_POOL_HANDLE,threadFunctionId_Motors,OPT_TP_PROCESS_EVENTS_WHILE_WAITING);
 	
 	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_read_parameters); 
 	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_update_interface); 
 	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_PID_temperature); 
+	CmtReleaseThreadPoolFunctionID (DEFAULT_THREAD_POOL_HANDLE, threadFunctionId_Motors); 
 	
 	
 	//UninitializeRead_Value();
@@ -191,8 +200,6 @@ int CVICALLBACK start_reading (int panel, int control, int event,
 	}
 	return 0;
 }
-
-
 //============================================================================== 
 
 int CVICALLBACK read_parameters (void *functionData)
@@ -488,7 +495,7 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 					FillBytes (pdata_TP, 0, 100, 0x0);
 					FillBytes (rdata_TP, 0, 100, 0x0);
 				
-					error_TP = sprintf(pdata_TP,"0011001006000000009\r");  //Ask velocity
+					error_TP = sprintf(pdata_TP,"0011001006000000009\r");  //Turn off the TP
 					error_TP = ComWrt (PortCOM_TP, pdata_TP,  strlen(pdata_TP));
 					tp_status = 0; // Flag to indicate that the TP is off
 					TP_Flag_Ptr = GetPointerToTP_Flag();
@@ -505,7 +512,7 @@ int (*Velocity_TP_Ptr); // Velocity of the Turbo pump
 					FillBytes (pdata_TP, 0, 100, 0x0);
 					FillBytes (rdata_TP, 0, 100, 0x0);
 				
-					error_TP = sprintf(pdata_TP,"0011001006111111015\r");  //Ask velocity
+					error_TP = sprintf(pdata_TP,"0011001006111111015\r");  //Turn on the TP
 					error_TP = ComWrt (PortCOM_TP, pdata_TP,  strlen(pdata_TP));
 					tp_status = 1; // Flag to indicate that the TP is on
 					TP_Flag_Ptr = GetPointerToTP_Flag();
@@ -816,7 +823,7 @@ int CVICALLBACK AV (int panel, int control, int event,
 				
 			
 			
-			GetCtrlVal(panelHandle , PANEL_LED_GV, &status);
+			GetCtrlVal(panelHandle , PANEL_LED_AV, &status);
 			if (status ==1)
 			{
 				
@@ -851,8 +858,6 @@ int CVICALLBACK AV (int panel, int control, int event,
 	}
 	return 0;
 }
-
-
 //============================================================================================
 
 int CVICALLBACK Gas_valve (int panel, int control, int event,
@@ -1144,8 +1149,7 @@ int CVICALLBACK PID_temperature (void *functionData)
 	time_aux = initial_time;
 	time_cicle = 0.0;
 	time_old = 0.0;
-	//GetCtrlVal(panelHandle , PANEL_Rate, &rate);
-	//GetCtrlVal(panelHandle , PANEL_Temperature_Set_Point, &temperature_set_point);
+	
 	GetCtrlVal(panelHandle , PANEL_temperature_n, &temperature_real);
 	rate = 0;
 	temperature_set_point = temperature_real;
@@ -1310,7 +1314,6 @@ int CVICALLBACK change_rate (int panel, int control, int event,
 	}
 	return 0;
 }
-
 //============================================================================================
 
 int CVICALLBACK change_temperature_set_point (int panel, int control, int event,
@@ -1359,6 +1362,146 @@ int CVICALLBACK Ar_flux (int panel, int control, int event,
 	}
 	return 0;
 }
+//============================================================================================
+
+int CVICALLBACK Motors (void *functionData)
+{
+	
+	// Local variables
+	int PortCOM = 8;
+	int error = -1;
+	char* pdata;
+	char p_datastr[100];
+	int rotation=0;
+	int rotation_flag = 0;
+	int index_old;
+	int index_new;
+	double toggle_time;
+	int toggle_velocity=20;
+	int toggle_amplitude = 0;
+	int toggle_flag = 0;
+	int toggle_direction = 0;
+	int return_home = 0;
+	double time_ini = 0;
+	double time_aux = 0;
+	int first = 0;
+	
+	error = OpenComConfig (PortCOM, "", 19200, 0, 8, 1, 512, 512);//8
+	pdata = p_datastr; 
+	FillBytes (pdata, 0, 100, 0x0);
+	
+	GetCtrlVal(panelHandle , PANEL_Motor_index, &index_old);
+	index_new = index_old;
+	
+	time_ini = Timer();
+	time_aux = time_ini;
+	
+	while(!gExit_read_parameters)
+	{
+		GetCtrlVal(panelHandle , PANEL_LED_Motor_rotation, &rotation);
+		
+		if (rotation == 1 && rotation_flag ==0)
+		{	
+			FillBytes (pdata, 0, 100, 0x0);
+			error = sprintf(pdata,"\ntSL %d\n",5000);
+			error = ComWrt (PortCOM, pdata,  strlen(pdata));
+			rotation_flag = 1;
+			Delay(0.1);
+		}
+		else if (rotation == 0 && rotation_flag ==1)
+		{
+			FillBytes (pdata, 0, 100, 0x0);
+			error = sprintf(pdata,"\ntSL %d\n",0);
+			error = ComWrt (PortCOM, pdata,  strlen(pdata));
+			rotation_flag = 0;
+			Delay(0.1);
+		}
+		
+		GetCtrlVal(panelHandle , PANEL_Motor_index, &index_new);
+		if (index_new != index_old)
+		{
+			FillBytes (pdata, 0, 100, 0x0);
+			error = sprintf(pdata,"\niMA %d\n",index_new);
+			error = ComWrt (PortCOM, pdata,  strlen(pdata));
+			index_old = index_new;
+			Delay(0.1);
+		}
+		
+		GetCtrlVal(panelHandle , PANEL_LED_toggle, &toggle_flag);
+		GetCtrlVal(panelHandle , PANEL_toggle_time, &toggle_time);
+		GetCtrlVal(panelHandle , PANEL_amplitude_steps, &toggle_amplitude);
+		if (toggle_flag == 1)
+		{
+			if (toggle_direction==0)
+			{
+				time_ini = Timer();
+				time_aux = time_ini;
+				FillBytes (pdata, 0, 100, 0x0);
+				error = sprintf(pdata,"\niMA %d\n",(index_old+toggle_amplitude));
+				//error = sprintf(pdata,"\niSL %d\n",toggle_velocity);
+				error = ComWrt (PortCOM, pdata,  strlen(pdata));
+				toggle_direction = 1;
+		  		return_home = 1;
+				first = 1;
+				
+			}
+			
+			if (first == 1 &&(time_aux - time_ini) > (toggle_time/2.0)) 
+			{
+				FillBytes (pdata, 0, 100, 0x0);
+				error = sprintf(pdata,"\niMA %d\n",(index_old-toggle_amplitude));
+				//error = sprintf(pdata,"\niSL %d\n",((-1)*toggle_velocity));
+				error = ComWrt (PortCOM, pdata,  strlen(pdata));
+				toggle_direction = 2;
+				time_ini = Timer();
+				first = 0;
+			}
+			else if ((time_aux - time_ini) > toggle_time)
+			{
+				if (toggle_direction == 1)
+				{
+					FillBytes (pdata, 0, 100, 0x0);
+					error = sprintf(pdata,"\niMA %d\n",(index_old-toggle_amplitude));
+					//error = sprintf(pdata,"\niSL %d\n",((-1)*toggle_velocity));
+					error = ComWrt (PortCOM, pdata,  strlen(pdata));
+					toggle_direction = 2;
+					time_ini = Timer();
+				}
+				else if (toggle_direction == 2)
+				{
+					FillBytes (pdata, 0, 100, 0x0);
+					error = sprintf(pdata,"\niMA %d\n",(index_old+toggle_amplitude));
+					//error = sprintf(pdata,"\niSL %d\n",toggle_velocity);
+					error = ComWrt (PortCOM, pdata,  strlen(pdata));
+					toggle_direction = 1;
+					time_ini = Timer();
+				}
+			}
+			time_aux = Timer();
+			
+		}
+		if (toggle_flag == 0 && return_home == 1)
+		{
+			//FillBytes (pdata, 0, 100, 0x0);
+			//error = sprintf(pdata,"\niSL %d\n",0);
+			//error = ComWrt (PortCOM, pdata,  strlen(pdata));
+			Delay(3.0);
+			FillBytes (pdata, 0, 100, 0x0);
+			error = sprintf(pdata,"\niMA %d\n",(index_old));
+			error = ComWrt (PortCOM, pdata,  strlen(pdata));
+			toggle_direction = 0;
+			return_home = 0;
+			Delay(3.0);
+		}
+		
+		Delay(0.1);
+	}
+	CloseCom (PortCOM);
+	
+	return 0;
+	
+}
+
 
 //============================================================================================
 int CVICALLBACK READ_FUNTION (int panel, int control, int event,
@@ -1508,232 +1651,7 @@ switch (event)
 }
 
 
-//==============================================================================================================================
-int CVICALLBACK WRITE_FUNTION (int panel, int control, int event,
-							   void *callbackData, int eventData1, int eventData2)
-{
-//Port COM
-static int PortCOM = 4;
-
-//Error
-int error = -5;
-
-//Buffer send & read
-unsigned char send_buffer[32]; //
-unsigned char read_buffer[32]; //  
-unsigned char Checksumm[1]; //  
-
-
-switch (event)
-	{
-		case EVENT_COMMIT:
-			//Open COM port
-			error = OpenComConfig (PortCOM, "", 38400, 2, 8, 1, 256, 256);
-			printf("COM %d port open = \t%d \n",PortCOM, error);
-			
-			//Flush COM Port
-			error = FlushInQ (PortCOM);
-			error = FlushOutQ (PortCOM);
-			printf("COM %d port flush = \t%d \n",PortCOM, error);
-			
-			//Fill buffer 0x0 (Clear) 
-			FillBytes (send_buffer, 0, 32, 0x0);
-			FillBytes (read_buffer, 0, 32, 0x0);
-			FillBytes (Checksumm, 0, 1, 0x0);
-			
-
-			//Concatenate command bytes
-			send_buffer[0] = 0x50; //"P"   	Start identifier
-			send_buffer[1] = 0x03; //		Number of process data output words
-			send_buffer[2] = 0x56; //		Message ident
-			send_buffer[3] = 0x01; //		Multipoint address SLAVE 1(The address 1 has been set on the coupler)		
-			send_buffer[4] = 0x00; //		Data byte 0
-			send_buffer[5] = 0x00; //		Data byte 1
-			send_buffer[6] = 0x00; //		Data byte 2
-			send_buffer[7] = 0x00; //		Data byte 3
-			send_buffer[8] = 0x01; //		Data byte 4
-			send_buffer[9] = 0x00; //		Data byte 5
-	
-			
-			for(int i=0; i < 10; i++)
-			{
-				Checksumm[0]= Checksumm[0] + send_buffer[i];
-			}
-			
-			printf("Checksum = %X\n", Checksumm[0]);
-			
-			send_buffer[10] = Checksumm[0]; //		
-			
-		
-			
-			//Request command from master to slave
-			for(int i=0; i < 11; i++)
-			{
-				printf("send_buffer[%d] = \t%X\n",i,send_buffer[i]);
-			}
-				
-			
-			//Write command to COM port
-			int write_bytes_counter = 0;
-			for(int i=0; i < 11; i++)
-			{
-				write_bytes_counter = write_bytes_counter + error;
-				error = ComWrtByte (PortCOM, send_buffer[i]);
-			}
-			
-			printf("Written bytes = \t%d \n", write_bytes_counter);
-			printf("OK\n");
-			
-			//Delay (0.1);
-			//READ			
-			for(int i=0; i < 6; i++)
-			{
-			read_buffer[i] = ComRdByte (PortCOM);
-			}
-			
-			
-			
-			CloseCom (PortCOM);	
-			break;
-	}
-	return 0;
-}
-
-
-/*
-int CVICALLBACK TP (int panel, int control, int event,
-					void *callbackData, int eventData1, int eventData2)
-{
-	unsigned char value[2];
-	int status = -1;
-
-	
-	// Thread safe variables
-	unsigned char write_values[18];
-	unsigned char (*Write_Value_Ptr)[18];
-	int (*Write_Flag_Ptr);
-	int (*TP_Flag_Ptr);
-	
-	
-	switch (event)
-		
-	{
-		case EVENT_COMMIT:
-				
-			
-			
-			GetCtrlVal(panelHandle , PANEL_LED_TP, &status);
-			if (status ==1)
-			{
-				
-				conv_short_to_word(32.0,value); // Turn on the 1st Bite (starting from 0)
-				Write_Value_Ptr = GetPointerToWrite_Value();
-				(*Write_Value_Ptr)[8] = (*Write_Value_Ptr)[8]+value[1];
-				ReleasePointerToWrite_Value();
-			
-				Write_Flag_Ptr = GetPointerToWrite_Flag();
-				(*Write_Flag_Ptr) = 1;
-				ReleasePointerToWrite_Flag();
-				
-				TP_Flag_Ptr = GetPointerToTP_Flag();
-				(*TP_Flag_Ptr) = 1;
-				ReleasePointerToTP_Flag();
-				
-			}
-			else
-			{
-				
-				conv_short_to_word(32.0,value); // Turn off the 1st Bite (starting from 0)
-				Write_Value_Ptr = GetPointerToWrite_Value();
-				(*Write_Value_Ptr)[8] = (*Write_Value_Ptr)[8] - value[1];
-				ReleasePointerToWrite_Value();
-				
-				Write_Flag_Ptr = GetPointerToWrite_Flag();
-				(*Write_Flag_Ptr) = 1;
-				ReleasePointerToWrite_Flag();
-				
-				TP_Flag_Ptr = GetPointerToTP_Flag();
-				(*TP_Flag_Ptr) = 0;
-				ReleasePointerToTP_Flag();
-			}
-			
-			
-			break;
-	}
-	return 0;
-}
-*/
-
-
-/*
-int CVICALLBACK start_K1 (int panel, int control, int event,
-						  void *callbackData, int eventData1, int eventData2)
-{
-	unsigned char value[2];
-	int status = -1;
-	
-	
-	// Thread safe variables
-	unsigned char write_values[18];
-	unsigned char (*Write_Value_Ptr)[18];
-	int (*Write_Flag_Ptr);
-	
-	
-	switch (event)
-		
-	{
-		case EVENT_COMMIT:
-				
-			
-			
-			GetCtrlVal(panelHandle , PANEL_LED_K1, &status);
-			if (status ==1)
-			{
-				
-				conv_short_to_word(1.0,value);
-				Write_Value_Ptr = GetPointerToWrite_Value();
-				(*Write_Value_Ptr)[8] = (*Write_Value_Ptr)[8]+ value[1];
-				ReleasePointerToWrite_Value();
-				
-				Write_Flag_Ptr = GetPointerToWrite_Flag();
-				(*Write_Flag_Ptr) = 1;
-				ReleasePointerToWrite_Flag();
-				
-				
-				
-			}
-			else
-			{
-				
-				conv_short_to_word(1.0,value);
-				Write_Value_Ptr = GetPointerToWrite_Value();
-				(*Write_Value_Ptr)[8] = (*Write_Value_Ptr)[8] - value[1];
-				ReleasePointerToWrite_Value();
-				
-				Write_Flag_Ptr = GetPointerToWrite_Flag();
-				(*Write_Flag_Ptr) = 1;
-				ReleasePointerToWrite_Flag();
-				
-			}
-			
-			
-			break;
-	}
-	return 0;
-}
-*/
-
-//tiempo = Timer ();
-
-
-
-
-
-
-
-
-
-
+//============================================================================================
 
 
 
